@@ -1,0 +1,23 @@
+// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+
+cloudinary.config({
+  cloud_name: "ECommerce",
+  api_key: "735288298551733",
+  api_secret: "4SjhfEcyl-ApK_fJpzW90MXLlZc",
+});
+
+const storage = new multer.memoryStorage();
+
+async function imageUploadUtil(file) {
+  const result = await cloudinary.uploader.upload(file, {
+    resource_type: "auto",
+  });
+
+  return result;
+}
+
+const upload = multer({ storage });
+
+module.exports = { upload, imageUploadUtil };

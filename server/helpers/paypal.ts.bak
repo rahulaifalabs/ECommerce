@@ -1,0 +1,22 @@
+// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
+const dotenv = require('dotenv');
+dotenv.config();
+
+const paypal = require('paypal-rest-sdk');
+
+const modeEnv = (process.env.PAYPAL_MODE || '').toLowerCase();
+const mode = ['sandbox', 'live'].includes(modeEnv)
+  ? modeEnv
+  : (process.env.NODE_ENV === 'production' ? 'live' : 'sandbox');
+
+if (!['sandbox', 'live'].includes(mode)) {
+  throw new Error('PAYPAL_MODE must be "sandbox" or "live"');
+}
+
+paypal.configure({
+  mode,
+  client_id: process.env.PAYPAL_CLIENT_ID || '<your-client-id>',
+  client_secret: process.env.PAYPAL_CLIENT_SECRET || '<your-client-secret>',
+});
+
+module.exports = paypal;
