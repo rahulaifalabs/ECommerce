@@ -1,7 +1,6 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../../models/User");
+import User from '../../models/User'
 
 const { generateToken } = require("../../utils/jwt");
 

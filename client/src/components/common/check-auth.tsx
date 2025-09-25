@@ -1,7 +1,17 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
+import { UserObj } from "@/store/auth-slice";
+import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
-function CheckAuth({ isAuthenticated, user, children }) {
+function CheckAuth({
+  isAuthenticated,
+  user,
+  children,
+}: {
+  isAuthenticated: boolean;
+  user: UserObj;
+  children?: ReactNode;
+}) {
   const location = useLocation();
 
   console.log(location.pathname, isAuthenticated);

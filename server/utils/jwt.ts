@@ -1,8 +1,8 @@
 // utils/jwt.js
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 // Generate JWT
-const generateToken = (user) => {
+export const generateToken = (user) => {
   return jwt.sign(
     {
       id: user._id,
@@ -16,7 +16,7 @@ const generateToken = (user) => {
 };
 
 // Verify JWT
-const verifyToken = (token) => {
+export const verifyToken = (token:string) => {
   try {
     return jwt.verify(token, process.env.SECRET_KEY);
   } catch (err) {
@@ -24,4 +24,5 @@ const verifyToken = (token) => {
   }
 };
 
-module.exports = { generateToken, verifyToken };
+// module.exports = { generateToken, verifyToken };
+

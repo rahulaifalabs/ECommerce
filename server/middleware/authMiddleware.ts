@@ -1,5 +1,6 @@
 // middleware/authMiddleware.js
-const { verifyToken } = require("../utils/jwt");
+// const { verifyToken } = require("../utils/jwt");
+import {verifyToken} from '../utils/jwt'
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers["authorization"];

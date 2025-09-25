@@ -2,6 +2,7 @@
 import ProductImageUpload from "@/components/admin-view/image-upload";
 import { Button } from "@/components/ui/button";
 import { addFeatureImage, getFeatureImages } from "@/store/common-slice";
+import { AppDispatch, RootState } from "@/store/store";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -9,8 +10,8 @@ function AdminDashboard() {
   const [imageFile, setImageFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageLoadingState, setImageLoadingState] = useState(false);
-  const dispatch = useDispatch();
-  const { featureImageList } = useSelector((state) => state.commonFeature);
+  const dispatch = useDispatch<AppDispatch>();
+  const { featureImageList } = useSelector((state:RootState) => state.commonFeature);
 
   console.log(uploadedImageUrl, "uploadedImageUrl");
 
@@ -40,6 +41,7 @@ function AdminDashboard() {
         setImageLoadingState={setImageLoadingState}
         imageLoadingState={imageLoadingState}
         isCustomStyling={true}
+        isEditMode={true}
         // isEditMode={currentEditedId !== null}
       />
       <Button onClick={handleUploadFeatureImage} className="mt-5 w-full">

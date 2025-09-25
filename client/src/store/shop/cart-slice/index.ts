@@ -1,7 +1,7 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import axios from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
+import api from "@/utils/api";
 const initialState = {
   cartItems: [],
   isLoading: false,
@@ -10,14 +10,11 @@ const initialState = {
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
   async ({ userId, productId, quantity }) => {
-    const response = await axios.post(
-      "http://localhost:5001/api/shop/cart/add",
-      {
-        userId,
-        productId,
-        quantity,
-      }
-    );
+    const response = await api.post("/shop/cart/add", {
+      userId,
+      productId,
+      quantity,
+    });
 
     return response.data;
   }
@@ -26,8 +23,8 @@ export const addToCart = createAsyncThunk(
 export const fetchCartItems = createAsyncThunk(
   "cart/fetchCartItems",
   async (userId) => {
-    const response = await axios.get(
-      `http://localhost:5001/api/shop/cart/get/${userId}`
+    const response = await api.get(
+      `/shop/cart/get/${userId}`
     );
 
     return response.data;
@@ -37,8 +34,8 @@ export const fetchCartItems = createAsyncThunk(
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
   async ({ userId, productId }) => {
-    const response = await axios.delete(
-      `http://localhost:5001/api/shop/cart/${userId}/${productId}`
+    const response = await api.delete(
+      `/shop/cart/${userId}/${productId}`
     );
 
     return response.data;
@@ -48,8 +45,8 @@ export const deleteCartItem = createAsyncThunk(
 export const updateCartQuantity = createAsyncThunk(
   "cart/updateCartQuantity",
   async ({ userId, productId, quantity }) => {
-    const response = await axios.put(
-      "http://localhost:5001/api/shop/cart/update-cart",
+    const response = await api.put(
+      "/shop/cart/update-cart",
       {
         userId,
         productId,

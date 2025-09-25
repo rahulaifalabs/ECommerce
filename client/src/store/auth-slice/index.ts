@@ -1,24 +1,39 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import api from "@/utils/api";
 
-const initialState = {
+export type UserObj = {
+  role: string;
+  id: string;
+  email: string;
+};
+
+export type User = {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: UserObj | null;
+  token: string;
+};
+
+const initialState: User = {
   isAuthenticated: false,
   isLoading: true,
-  user: null,
+  user: {
+    id: "",
+    email: "",
+    role: "",
+  },
+  token: localStorage.getItem("token") as string, // Initialize from localStorage if available
 };
 
 export const registerUser = createAsyncThunk(
   "/auth/register",
 
   async (formData) => {
-    const response = await axios.post(
-      "http://localhost:5001/api/auth/register",
-      formData,
-      {
-        withCredentials: true,
-      }
-    );
+    const response = await api.post("/auth/register", formData, {
+      withCredentials: true,
+    });
 
     return response.data;
   }
@@ -28,13 +43,9 @@ export const loginUser = createAsyncThunk(
   "/auth/login",
 
   async (formData) => {
-    const response = await axios.post(
-      "http://localhost:5001/api/auth/login",
-      formData,
-      {
-        withCredentials: true,
-      }
-    );
+    const response = await api.post("/auth/login", formData, {
+      withCredentials: true,
+    });
 
     return response.data;
   }
@@ -42,7 +53,7 @@ export const loginUser = createAsyncThunk(
 
 export const logoutUser = createAsyncThunk("/auth/logout", async () => {
   // No need to send credentials if we're not using cookies
-  const response = await axios.post("http://localhost:5001/api/auth/logout");
+  const response = await api.post("/auth/logout");
   return response.data;
 });
 
@@ -50,16 +61,15 @@ export const checkAuth = createAsyncThunk(
   "/auth/checkauth",
 
   async () => {
-    const response = await axios.get(
-      "http://localhost:5001/api/auth/check-auth",
-      {
-        withCredentials: true,
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-        },
-      }
-    );
+    const token = localStorage.getItem("token");
+    const response = await api.get("/auth/check-auth", {
+      withCredentials: true,
+      headers: {
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
   }
@@ -94,7 +104,8 @@ const authSlice = createSlice({
 
         state.isLoading = false;
         state.user = action.payload.success ? action.payload.user : null;
-        state.isAuthenticated = action.payload.success;
+        state.isAuthenticated = true;
+        localStorage.setItem("token", action.payload.token);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -107,7 +118,7 @@ const authSlice = createSlice({
       .addCase(checkAuth.fulfilled, (state, action) => {
         state.isLoading = false;
         state.user = action.payload.success ? action.payload.user : null;
-        state.isAuthenticated = action.payload.success;
+        state.isAuthenticated = true;
       })
       .addCase(checkAuth.rejected, (state, action) => {
         state.isLoading = false;
@@ -115,12 +126,11 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
       })
       .addCase(logoutUser.fulfilled, (state) => {
-  localStorage.removeItem("token"); // remove JWT from client storage
-  state.user = null;
-  state.isAuthenticated = false;
-  state.isLoading = false;
-});
-
+        localStorage.removeItem("token"); // remove JWT from client storage
+        state.user = null;
+        state.isAuthenticated = false;
+        state.isLoading = false;
+      });
   },
 });
 

@@ -1,6 +1,7 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+import api from "@/utils/api";
 
 const initialState = {
   isLoading: false,
@@ -10,8 +11,8 @@ const initialState = {
 export const getSearchResults = createAsyncThunk(
   "/order/getSearchResults",
   async (keyword) => {
-    const response = await axios.get(
-      `http://localhost:5001/api/shop/search/${keyword}`
+    const response = await api.get(
+      `/shop/search/${keyword}`
     );
 
     return response.data;

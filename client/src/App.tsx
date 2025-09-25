@@ -23,20 +23,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
+import { AppDispatch, RootState } from "./store/store";
+// import RootState from your store file, e.g.:
+
 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
-    (state) => state.auth
+    (state:RootState) => state.auth
   );
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    dispatch(checkAuth());
+  dispatch(checkAuth());
   }, [dispatch]);
 
   if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
 
   console.log(isLoading, user);
+
+
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
