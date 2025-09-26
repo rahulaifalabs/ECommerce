@@ -26,4 +26,4 @@ router.post("/multiple", upload.array("images", 5), (req: Request, res: Response
   res.json({ success: true, files });
 });
 
-export default router;
+module.exports = router;

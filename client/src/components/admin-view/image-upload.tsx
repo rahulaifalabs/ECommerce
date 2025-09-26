@@ -47,24 +47,33 @@ function ProductImageUpload({
     }
   }
 
-  async function uploadImageToCloudinary() {
-    setImageLoadingState(true);
-    const data = new FormData();
-    data.append("my_file", imageFile);
-    const response = await api.post(
-      "/admin/products/upload-image",
-      data
-    );
-    console.log(response, "response");
+  async function uploadImage() {
+    try {
+      setImageLoadingState(true);
+      const data = new FormData();
+      data.append("my_file", imageFile);
+      const response = await api.post(
+        "/admin/products/upload-image",
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log(response, "response");
 
-    if (response?.data?.success) {
-      setUploadedImageUrl(response.data.result.url);
+      if (response?.data?.success) {
+        // use url returned by server that serves from /uploads
+        setUploadedImageUrl(response.data.result.url);
+      }
+    } catch (err) {
+      console.error("Image upload failed", err);
+    } finally {
       setImageLoadingState(false);
     }
   }
 
   useEffect(() => {
-    if (imageFile !== null) uploadImageToCloudinary();
+    if (imageFile !== null) uploadImage();
   }, [imageFile]);
 
   return (

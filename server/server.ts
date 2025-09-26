@@ -109,7 +109,7 @@ const shopSearchRouter = require("./routes/shop/search-routes");
 const shopReviewRouter = require("./routes/shop/review-routes");
 const commonFeatureRouter = require("./routes/common/feature-routes");
 
-import uploadRoutes from "./routes/uploads/upload";
+const uploadRoutes = require("./routes/uploads/upload");
 const MongoDB_URI = require("./config/db");
 
 // normalize to string URI (support string or object like { uri: '...' } )
@@ -136,7 +136,7 @@ const PORT = process.env.PORT || 5001;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5174",
     methods: ["GET", "POST", "DELETE", "PUT"],
     allowedHeaders: [
       "Content-Type",
@@ -153,9 +153,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Serve static uploads folder
-app.use("/uploads", express.static(path.join(__dirname, "../../uploads")));
-
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Register upload routes
 app.use("/api/upload", uploadRoutes);
@@ -173,8 +171,7 @@ app.use("/api/shop/review", shopReviewRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
 
-// Serve uploaded files from /uploads
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve uploaded files from /uploads (already configured above)
 
 app.listen(PORT, () =>
   console.log(`Server is listening at http://localhost:${PORT}`)

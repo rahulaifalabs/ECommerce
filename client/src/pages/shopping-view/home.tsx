@@ -127,7 +127,7 @@ function ShoppingHome() {
         {featureImageList && featureImageList.length > 0
           ? featureImageList.map((slide, index) => (
               <img
-                src={slide?.image}
+                src={(slide?.image || '').startsWith('/') ? `http://localhost:5001${slide?.image}` : slide?.image}
                 key={index}
                 className={`${
                   index === currentSlide ? "opacity-100" : "opacity-0"
