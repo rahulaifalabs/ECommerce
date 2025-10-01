@@ -1,4 +1,6 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import ProductFilter from "@/components/shopping-view/filter";
 import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
@@ -18,47 +20,47 @@ import {
   fetchProductDetails,
 } from "@/store/shop/products-slice";
 import { ArrowUpDownIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useSearchParams } from "react-router-dom";
+import { AppDispatch } from "@/store/store";
 
-function createSearchParamsHelper(filterParams) {
-  const queryParams = [];
-
+// ✅ helper
+function createSearchParamsHelper(filterParams: any) {
+  const queryParams: string[] = [];
   for (const [key, value] of Object.entries(filterParams)) {
     if (Array.isArray(value) && value.length > 0) {
       const paramValue = value.join(",");
-
       queryParams.push(`${key}=${encodeURIComponent(paramValue)}`);
     }
   }
-
-  console.log(queryParams, "queryParams");
-
   return queryParams.join("&");
 }
 
 function ShoppingListing() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { productList, productDetails } = useSelector(
-    (state) => state.shopProducts
+    (state: any) => state.shopProducts
   );
-  const { cartItems } = useSelector((state) => state.shopCart);
-  const { user } = useSelector((state) => state.auth);
+  const { cartItems } = useSelector((state: any) => state.shopCart);
+  const { user } = useSelector((state: any) => state.auth);
+
   const [filters, setFilters] = useState({});
-  const [sort, setSort] = useState(null);
+  const [sort, setSort] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const { toast } = useToast();
 
+  // ✅ pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; // show 8 products per page
+
   const categorySearchParam = searchParams.get("category");
 
-  function handleSort(value) {
+  function handleSort(value: string) {
     setSort(value);
+    setCurrentPage(1); // reset page when sort changes
   }
 
-  function handleFilter(getSectionId, getCurrentOption) {
-    let cpyFilters = { ...filters };
+  function handleFilter(getSectionId: string, getCurrentOption: string) {
+    let cpyFilters: any = { ...filters };
     const indexOfCurrentSection = Object.keys(cpyFilters).indexOf(getSectionId);
 
     if (indexOfCurrentSection === -1) {
@@ -69,28 +71,25 @@ function ShoppingListing() {
     } else {
       const indexOfCurrentOption =
         cpyFilters[getSectionId].indexOf(getCurrentOption);
-
       if (indexOfCurrentOption === -1)
         cpyFilters[getSectionId].push(getCurrentOption);
       else cpyFilters[getSectionId].splice(indexOfCurrentOption, 1);
     }
 
     setFilters(cpyFilters);
+    setCurrentPage(1); // reset page when filters change
     sessionStorage.setItem("filters", JSON.stringify(cpyFilters));
   }
 
-  function handleGetProductDetails(getCurrentProductId) {
-    console.log(getCurrentProductId);
-    dispatch(fetchProductDetails(getCurrentProductId));
+  function handleGetProductDetails(getCurrentProductId: string) {
+    dispatch(fetchProductDetails({id:getCurrentProductId}));
   }
 
-  function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    console.log(cartItems);
+  function handleAddtoCart(getCurrentProductId: string, getTotalStock: number) {
     let getCartItems = cartItems.items || [];
-
     if (getCartItems.length) {
       const indexOfCurrentItem = getCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId
+        (item: any) => item.productId === getCurrentProductId
       );
       if (indexOfCurrentItem > -1) {
         const getQuantity = getCartItems[indexOfCurrentItem].quantity;
@@ -99,7 +98,6 @@ function ShoppingListing() {
             title: `Only ${getQuantity} quantity can be added for this item`,
             variant: "destructive",
           });
-
           return;
         }
       }
@@ -107,23 +105,21 @@ function ShoppingListing() {
 
     dispatch(
       addToCart({
-        userId: user?.id,
+        userId: user?.id as string,
         productId: getCurrentProductId,
         quantity: 1,
       })
-    ).then((data) => {
+    ).then((data: any) => {
       if (data?.payload?.success) {
         dispatch(fetchCartItems(user?.id));
-        toast({
-          title: "Product is added to cart",
-        });
+        toast({ title: "Product is added to cart" });
       }
     });
   }
 
   useEffect(() => {
     setSort("price-lowtohigh");
-    setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
+    setFilters(JSON.parse(sessionStorage.getItem("filters") || "{}"));
   }, [categorySearchParam]);
 
   useEffect(() => {
@@ -144,11 +140,18 @@ function ShoppingListing() {
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
 
-  console.log(productList, "productListproductListproductList");
+  // ✅ pagination logic
+  const totalPages = Math.ceil(productList?.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentProducts = productList?.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
       <ProductFilter filters={filters} handleFilter={handleFilter} />
+
       <div className="bg-background w-full rounded-lg shadow-sm">
         <div className="p-4 border-b flex items-center justify-between">
           <h2 className="text-lg font-extrabold">All Products</h2>
@@ -168,7 +171,7 @@ function ShoppingListing() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                <DropdownMenuRadioGroup value={sort!} onValueChange={handleSort}>
                   {sortOptions.map((sortItem) => (
                     <DropdownMenuRadioItem
                       value={sortItem.id}
@@ -182,18 +185,53 @@ function ShoppingListing() {
             </DropdownMenu>
           </div>
         </div>
+
+        {/* ✅ Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {productList && productList.length > 0
-            ? productList.map((productItem) => (
-                <ShoppingProductTile
-                  handleGetProductDetails={handleGetProductDetails}
-                  product={productItem}
-                  handleAddtoCart={handleAddtoCart}
-                />
-              ))
-            : null}
+          {currentProducts && currentProducts.length > 0 ? (
+            currentProducts.map((productItem: any) => (
+              <ShoppingProductTile
+                key={productItem.id}
+                handleGetProductDetails={handleGetProductDetails}
+                product={productItem}
+                handleAddtoCart={handleAddtoCart}
+              />
+            ))
+          ) : (
+            <p className="text-center col-span-full text-gray-500">
+              No products found
+            </p>
+          )}
         </div>
+
+        {/* ✅ Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 p-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+            >
+              Previous
+            </Button>
+
+            <span className="text-sm font-medium">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
+
       <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}
@@ -204,3 +242,4 @@ function ShoppingListing() {
 }
 
 export default ShoppingListing;
+

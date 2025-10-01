@@ -1,7 +1,6 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import React from "react";
 import ProductImageUpload from "@/components/admin-view/image-upload";
-import AdminProductTile from "@/components/admin-view/product-tile";
 import CommonForm from "@/components/common/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,9 +19,11 @@ import {
 } from "@/store/admin/products-slice";
 import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import AdminProductTile from "@/components/admin-view/Product-tile";
 
 const initialFormData = {
-  image: null,
+  image: "",
   title: "",
   description: "",
   category: "",
@@ -33,6 +34,20 @@ const initialFormData = {
   averageReview: 0,
 };
 
+export interface Product {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+  category: string;
+  brand: string;
+  price: string;
+  salePrice: string;
+  totalStock: string;
+  averageReview: number;
+  // Add any other fields your product object contains
+}
+
 function AdminProducts() {
   const [openCreateProductsDialog, setOpenCreateProductsDialog] =
     useState(false);
@@ -40,51 +55,52 @@ function AdminProducts() {
   const [imageFile, setImageFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageLoadingState, setImageLoadingState] = useState(false);
-  const [currentEditedId, setCurrentEditedId] = useState(null);
+  const [currentEditedId, setCurrentEditedId] = useState<string>();
 
-  const { productList } = useSelector((state) => state.adminProducts);
-  const dispatch = useDispatch();
+  const { productList } = useSelector((state: any) => state.adminProducts);
+  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
-
-  function onSubmit(event) {
+  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    currentEditedId !== null
-      ? dispatch(
-          editProduct({
-            id: currentEditedId,
-            formData,
-          })
-        ).then((data) => {
-          console.log(data, "edit");
+    if (currentEditedId !== null) {
+      dispatch(
+        editProduct({
+          id: currentEditedId,
+          formData,
+        } as any) // If your thunk expects a specific type, replace 'any' with the correct type
+      ).then((data: any) => {
+        console.log(data, "edit");
 
-          if (data?.payload?.success) {
-            dispatch(fetchAllProducts());
-            setFormData(initialFormData);
-            setOpenCreateProductsDialog(false);
-            setCurrentEditedId(null);
-          }
-        })
-      : dispatch(
-          addNewProduct({
-            ...formData,
-            image: uploadedImageUrl,
-          })
-        ).then((data) => {
-          if (data?.payload?.success) {
-            dispatch(fetchAllProducts());
-            setOpenCreateProductsDialog(false);
-            setImageFile(null);
-            setFormData(initialFormData);
-            toast({
-              title: "Product add successfully",
-            });
-          }
-        });
+        if (data?.payload?.success) {
+          dispatch(fetchAllProducts());
+          setFormData(initialFormData);
+          setOpenCreateProductsDialog(false);
+          setCurrentEditedId("");
+        }
+      });
+    } else {
+      dispatch(
+        addNewProduct({
+          ...formData,
+          image: uploadedImageUrl,
+        } as any) // If your thunk expects a specific type, replace 'any' with the correct type
+      ).then((data: any) => {
+        if (data?.payload?.success) {
+          dispatch(fetchAllProducts());
+          setOpenCreateProductsDialog(false);
+          setImageFile(null);
+          setFormData(initialFormData);
+          toast({
+            title: "Product add successfully",
+          });
+        }
+      });
+    }
   }
-
-  function handleDelete(getCurrentProductId) {
-    dispatch(deleteProduct(getCurrentProductId)).then((data) => {
+  function handleDelete(getCurrentProductId: string) {
+    if (!getCurrentProductId) return;
+    dispatch(deleteProduct(getCurrentProductId)).then((data: any) => {
       if (data?.payload?.success) {
         dispatch(fetchAllProducts());
       }
@@ -94,28 +110,36 @@ function AdminProducts() {
   function isFormValid() {
     return Object.keys(formData)
       .filter((currentKey) => currentKey !== "averageReview")
-      .map((key) => formData[key] !== "")
+      .map((key) => formData[key as keyof typeof formData] !== "")
       .every((item) => item);
   }
 
-  useEffect(() => {
-    dispatch(fetchAllProducts());
-  }, [dispatch]);
-
-  console.log(formData, "productList");
-
   return (
     <Fragment>
-      <div className="mb-5 w-full flex justify-end">
+      {/* Add your page layout and controls here */}
+      <div className="mb-4 flex items-center justify-between">
         <Button onClick={() => setOpenCreateProductsDialog(true)}>
-          Add New Product
+          Add Product
         </Button>
       </div>
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
         {productList && productList.length > 0
-          ? productList.map((productItem) => (
+          ? productList.map((productItem: Product) => (
               <AdminProductTile
-                setFormData={setFormData}
+                key={productItem.id}
+                setFormData={(product: Product) =>
+                  setFormData({
+                    image: product.image,
+                    title: product.title,
+                    description: product.description,
+                    category: product.category,
+                    brand: product.brand,
+                    price: product.price,
+                    salePrice: product.salePrice,
+                    totalStock: product.totalStock,
+                    averageReview: product.averageReview,
+                  })
+                }
                 setOpenCreateProductsDialog={setOpenCreateProductsDialog}
                 setCurrentEditedId={setCurrentEditedId}
                 product={productItem}
@@ -128,7 +152,7 @@ function AdminProducts() {
         open={openCreateProductsDialog}
         onOpenChange={() => {
           setOpenCreateProductsDialog(false);
-          setCurrentEditedId(null);
+          setCurrentEditedId("");
           setFormData(initialFormData);
         }}
       >
@@ -162,5 +186,4 @@ function AdminProducts() {
     </Fragment>
   );
 }
-
 export default AdminProducts;

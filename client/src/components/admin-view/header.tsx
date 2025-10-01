@@ -5,7 +5,9 @@ import { useDispatch } from "react-redux";
 import { logoutUser } from "../../store/auth-slice/index";
 import {useNavigate} from "react-router-dom"
 
-function AdminHeader({ setOpen }) {
+
+
+function AdminHeader({ setOpen}) {
   const dispatch = useDispatch()
   const navigate= useNavigate();
 

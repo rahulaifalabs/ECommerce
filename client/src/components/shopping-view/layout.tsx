@@ -1,6 +1,7 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { Outlet } from "react-router-dom";
 import ShoppingHeader from "./header";
+import Footer from "./Footer";
 
 function ShoppingLayout() {
   return (
@@ -10,6 +11,9 @@ function ShoppingLayout() {
       <main className="flex flex-col w-full">
         <Outlet />
       </main>
+      <footer>
+        <Footer/>
+      </footer>
     </div>
   );
 }

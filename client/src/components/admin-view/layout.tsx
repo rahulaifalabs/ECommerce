@@ -1,8 +1,8 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { Outlet } from "react-router-dom";
-import AdminSideBar from "./sidebar";
-import AdminHeader from "./header";
 import { useState } from "react";
+import AdminSideBar from "./Sidebar";
+import AdminHeader from "./Header";
 
 function AdminLayout() {
   const [openSidebar, setOpenSidebar] = useState(false);

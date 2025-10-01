@@ -29,7 +29,9 @@ export const fetchAllFilteredProducts = createAsyncThunk(
   }
 );
 
-export const fetchProductDetails = createAsyncThunk(
+export const fetchProductDetails = createAsyncThunk<{},
+{id:string}
+>(
   "/products/fetchProductDetails",
   async (id) => {
     const result = await api.get(
