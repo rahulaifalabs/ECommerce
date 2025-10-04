@@ -1,4 +1,3 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -11,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import AdminOrderDetailsView from "./order-details";
+
+import AdminOrderDetailsView from "./Order-details";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getAllOrdersForAdmin,
@@ -19,22 +19,37 @@ import {
   resetOrderDetails,
 } from "@/store/admin/order-slice";
 import { Badge } from "../ui/badge";
+import type { RootState, AppDispatch } from "@/store/store";
+
+// ✅ Types
+interface OrderItem {
+  _id: string;
+  orderDate: string;
+  orderStatus: string;
+  totalAmount: number;
+  cartItems?: any[];
+  addressInfo?: any;
+}
 
 function AdminOrdersView() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
-  const { orderList, orderDetails } = useSelector((state) => state.adminOrder);
-  const dispatch = useDispatch();
 
-  function handleFetchOrderDetails(getId) {
+  const { orderList, orderDetails } = useSelector(
+    (state: RootState) => state.adminOrder
+  );
+  const dispatch: AppDispatch = useDispatch();
+
+  // Fetch order details
+  function handleFetchOrderDetails(getId: string) {
     dispatch(getOrderDetailsForAdmin(getId));
   }
 
+  // Fetch all orders on mount
   useEffect(() => {
     dispatch(getAllOrdersForAdmin());
   }, [dispatch]);
 
-  console.log(orderDetails, "orderList");
-
+  // Open dialog when orderDetails is set
   useEffect(() => {
     if (orderDetails !== null) setOpenDetailsDialog(true);
   }, [orderDetails]);
@@ -59,24 +74,24 @@ function AdminOrdersView() {
           </TableHeader>
           <TableBody>
             {orderList && orderList.length > 0
-              ? orderList.map((orderItem) => (
-                  <TableRow>
-                    <TableCell>{orderItem?._id}</TableCell>
-                    <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
+              ? orderList.map((orderItem: OrderItem) => (
+                  <TableRow key={orderItem._id}>
+                    <TableCell>{orderItem._id}</TableCell>
+                    <TableCell>{orderItem.orderDate.split("T")[0]}</TableCell>
                     <TableCell>
                       <Badge
                         className={`py-1 px-3 ${
-                          orderItem?.orderStatus === "confirmed"
+                          orderItem.orderStatus === "confirmed"
                             ? "bg-green-500"
-                            : orderItem?.orderStatus === "rejected"
+                            : orderItem.orderStatus === "rejected"
                             ? "bg-red-600"
                             : "bg-black"
                         }`}
                       >
-                        {orderItem?.orderStatus}
+                        {orderItem.orderStatus}
                       </Badge>
                     </TableCell>
-                    <TableCell>${orderItem?.totalAmount}</TableCell>
+                    <TableCell>${orderItem.totalAmount}</TableCell>
                     <TableCell>
                       <Dialog
                         open={openDetailsDialog}
@@ -87,7 +102,7 @@ function AdminOrdersView() {
                       >
                         <Button
                           onClick={() =>
-                            handleFetchOrderDetails(orderItem?._id)
+                            handleFetchOrderDetails(orderItem._id)
                           }
                         >
                           View Details

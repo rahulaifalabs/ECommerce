@@ -1,73 +1,98 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
+// ShoppingProductTile.tsx
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { Button } from "../ui/button";
 import { brandOptionsMap, categoryOptionsMap } from "@/config";
 import { Badge } from "../ui/badge";
 
+interface Product {
+  _id: string;
+  title: string;
+  image?: string;
+  price: number;
+  salePrice: number;
+  totalStock: number;
+  category: keyof typeof categoryOptionsMap;
+  brand: keyof typeof brandOptionsMap;
+}
+
+interface ShoppingProductTileProps {
+  product: Product;
+  handleGetProductDetails: (id: string) => void;
+  handleAddtoCart: (id: string, stock: number) => void;
+}
+
 function ShoppingProductTile({
   product,
   handleGetProductDetails,
   handleAddtoCart,
-}) {
+}: ShoppingProductTileProps) {
   const BASE_URL = "http://localhost:5001";
 
   return (
     <Card className="w-full max-w-sm mx-auto">
-      <div onClick={() => handleGetProductDetails(product?._id)}>
+      <div onClick={() => handleGetProductDetails(product._id)}>
         <div className="relative">
           <img
-             src={product?.image ? `${BASE_URL}${product.image}` : "/placeholder.png"}
-            alt={product?.title}
+            src={product.image ? `${BASE_URL}${product.image}` : "/placeholder.png"}
+            alt={product.title}
             className="w-full h-[300px] object-cover rounded-t-lg"
           />
-          {product?.totalStock === 0 ? (
+
+          {/* Stock / Sale badges */}
+          {product.totalStock === 0 ? (
             <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">
               Out Of Stock
             </Badge>
-          ) : product?.totalStock < 10 ? (
+          ) : product.totalStock < 10 ? (
             <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">
-              {`Only ${product?.totalStock} items left`}
+              {`Only ${product.totalStock} items left`}
             </Badge>
-          ) : product?.salePrice > 0 ? (
+          ) : product.salePrice > 0 ? (
             <Badge className="absolute top-2 left-2 bg-red-500 hover:bg-red-600">
               Sale
             </Badge>
           ) : null}
         </div>
+
+        {/* Product details */}
         <CardContent className="p-4">
-          <h2 className="text-xl font-bold mb-2">{product?.title}</h2>
+          <h2 className="text-xl font-bold mb-2">{product.title}</h2>
+
           <div className="flex justify-between items-center mb-2">
             <span className="text-[16px] text-muted-foreground">
-              {categoryOptionsMap[product?.category]}
+              {categoryOptionsMap[product.category]}
             </span>
             <span className="text-[16px] text-muted-foreground">
-              {brandOptionsMap[product?.brand]}
+              {brandOptionsMap[product.brand]}
             </span>
           </div>
+
           <div className="flex justify-between items-center mb-2">
             <span
               className={`${
-                product?.salePrice > 0 ? "line-through" : ""
+                product.salePrice > 0 ? "line-through" : ""
               } text-lg font-semibold text-primary`}
             >
-              ${product?.price}
+              ${product.price}
             </span>
-            {product?.salePrice > 0 ? (
+            {product.salePrice > 0 && (
               <span className="text-lg font-semibold text-primary">
-                ${product?.salePrice}
+                ${product.salePrice}
               </span>
-            ) : null}
+            )}
           </div>
         </CardContent>
       </div>
+
+      {/* Footer with button */}
       <CardFooter>
-        {product?.totalStock === 0 ? (
+        {product.totalStock === 0 ? (
           <Button className="w-full opacity-60 cursor-not-allowed">
             Out Of Stock
           </Button>
         ) : (
           <Button
-            onClick={() => handleAddtoCart(product?._id, product?.totalStock)}
+            onClick={() => handleAddtoCart(product._id, product.totalStock)}
             className="w-full"
           >
             Add to cart

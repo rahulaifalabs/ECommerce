@@ -1,31 +1,47 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "@/utils/api";
 
-const initialState = {
+// ---------------- Types ----------------
+export interface Review {
+  productId: string;
+  userId: string;
+  userName: string;
+  reviewMessage: string;
+  reviewValue: number;
+}
+
+interface ReviewState {
+  isLoading: boolean;
+  reviews: Review[];
+}
+
+// ---------------- Initial State ----------------
+const initialState: ReviewState = {
   isLoading: false,
   reviews: [],
 };
 
-export const addReview = createAsyncThunk(
-  "/order/addReview",
-  async (formdata) => {
-    const response = await api.post(
-      `/shop/review/add`,
-      formdata
-    );
+// ---------------- Thunks ----------------
 
-    return response.data;
-  }
-);
-
-export const getReviews = createAsyncThunk("/order/getReviews", async (id) => {
-  const response = await api.get(`/shop/review/${id}`);
-
+// Add a new review (typed payload)
+export const addReview = createAsyncThunk<
+  any, // return type (API response)
+  Review // argument type
+>("/order/addReview", async (formData) => {
+  const response = await api.post(`/shop/review/add`, formData);
   return response.data;
 });
 
+// Fetch reviews by product ID
+export const getReviews = createAsyncThunk<
+  any,
+  string // product ID
+>("/order/getReviews", async (id) => {
+  const response = await api.get(`/shop/review/${id}`);
+  return response.data;
+});
+
+// ---------------- Slice ----------------
 const reviewSlice = createSlice({
   name: "reviewSlice",
   initialState,
@@ -35,13 +51,22 @@ const reviewSlice = createSlice({
       .addCase(getReviews.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(getReviews.fulfilled, (state, action) => {
+      .addCase(getReviews.fulfilled, (state, action: PayloadAction<{ data: Review[] }>) => {
         state.isLoading = false;
         state.reviews = action.payload.data;
       })
       .addCase(getReviews.rejected, (state) => {
         state.isLoading = false;
         state.reviews = [];
+      })
+      .addCase(addReview.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addReview.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(addReview.rejected, (state) => {
+        state.isLoading = false;
       });
   },
 });

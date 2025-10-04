@@ -1,5 +1,8 @@
 // AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
-export const registerFormControls = [
+
+import type { FormControl } from "@/components/common/form";
+
+export const registerFormControls: FormControl[] = [
   {
     name: "userName",
     label: "User Name",
@@ -23,7 +26,7 @@ export const registerFormControls = [
   },
 ];
 
-export const loginFormControls = [
+export const loginFormControls: FormControl[] = [
   {
     name: "email",
     label: "Email",
@@ -40,7 +43,7 @@ export const loginFormControls = [
   },
 ];
 
-export const addProductFormElements = [
+export const addProductFormElements: FormControl[] = [
   {
     label: "Title",
     name: "title",
@@ -101,6 +104,44 @@ export const addProductFormElements = [
     placeholder: "Enter total stock",
   },
 ];
+
+export const addressFormControls: FormControl[] = [
+  {
+    label: "Address",
+    name: "address",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter your address",
+  },
+  {
+    label: "City",
+    name: "city",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter your city",
+  },
+  {
+    label: "Pincode",
+    name: "pincode",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter your pincode",
+  },
+  {
+    label: "Phone",
+    name: "phone",
+    componentType: "input",
+    type: "text",
+    placeholder: "Enter your phone number",
+  },
+  {
+    label: "Notes",
+    name: "notes",
+    componentType: "textarea",
+    placeholder: "Enter any additional notes",
+  },
+];
+
 
 export const shoppingViewHeaderMenuItems = [
   {
@@ -187,39 +228,3 @@ export const sortOptions = [
   { id: "title-ztoa", label: "Title: Z to A" },
 ];
 
-export const addressFormControls = [
-  {
-    label: "Address",
-    name: "address",
-    componentType: "input",
-    type: "text",
-    placeholder: "Enter your address",
-  },
-  {
-    label: "City",
-    name: "city",
-    componentType: "input",
-    type: "text",
-    placeholder: "Enter your city",
-  },
-  {
-    label: "Pincode",
-    name: "pincode",
-    componentType: "input",
-    type: "text",
-    placeholder: "Enter your pincode",
-  },
-  {
-    label: "Phone",
-    name: "phone",
-    componentType: "input",
-    type: "text",
-    placeholder: "Enter your phone number",
-  },
-  {
-    label: "Notes",
-    name: "notes",
-    componentType: "textarea",
-    placeholder: "Enter any additional notes",
-  },
-];

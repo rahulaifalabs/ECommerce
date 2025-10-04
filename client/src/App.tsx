@@ -1,60 +1,63 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
+// AUTO-CONVERTED: extension changed to TypeScript. Fully typed
 import { Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
 import AuthLayout from "./components/auth/layout";
 import AuthLogin from "./pages/auth/login";
 import AuthRegister from "./pages/auth/register";
-import AdminLayout from "./components/admin-view/layout";
+import AdminLayout from "./components/admin-view/Layout";
 import AdminDashboard from "./pages/admin-view/dashboard";
 import AdminProducts from "./pages/admin-view/Products";
 import AdminOrders from "./pages/admin-view/Orders";
 import AdminFeatures from "./pages/admin-view/features";
 import ShoppingLayout from "./components/shopping-view/layout";
-import NotFound from "./pages/not-found";
 import ShoppingHome from "./pages/shopping-view/home";
 import ShoppingListing from "./pages/shopping-view/listing";
 import ShoppingCheckout from "./pages/shopping-view/checkout";
 import ShoppingAccount from "./pages/shopping-view/account";
-import CheckAuth from "./components/common/check-auth";
-import UnauthPage from "./pages/unauth-page";
-import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { checkAuth } from "./store/auth-slice";
-import { Skeleton } from "@/components/ui/skeleton";
-import PaypalReturnPage from "./pages/shopping-view/paypal-return";
+// import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
-import { AppDispatch, RootState } from "./store/store";
-// import RootState from your store file, e.g.:
 
+import NotFound from "./pages/not-found";
+import UnauthPage from "./pages/unauth-page";
+import CheckAuth from "./components/common/check-auth";
+
+import { Skeleton } from "@/components/ui/skeleton";
+
+import { AppDispatch, RootState } from "./store/store";
+import { checkAuth } from "./store/auth-slice";
 
 function App() {
+  // Properly typed selector
   const { user, isAuthenticated, isLoading } = useSelector(
-    (state:RootState) => state.auth
+    (state: RootState) => state.auth
   );
+
   const dispatch = useDispatch<AppDispatch>();
 
+  // Check authentication on mount
   useEffect(() => {
-  dispatch(checkAuth());
+    dispatch(checkAuth());
   }, [dispatch]);
 
-  if (isLoading) return <Skeleton className="w-[800] bg-black h-[600px]" />;
-
-  console.log(isLoading, user);
-
-
+  // Show skeleton while loading
+  if (isLoading)
+    return <Skeleton className="w-[800px] h-[600px] bg-black" />;
 
   return (
     <div className="flex flex-col overflow-hidden bg-white">
       <Routes>
+        {/* Root route */}
         <Route
           path="/"
           element={
-            <CheckAuth
-              isAuthenticated={isAuthenticated}
-              user={user}
-            ></CheckAuth>
+            <CheckAuth isAuthenticated={isAuthenticated} user={user} />
           }
         />
+
+        {/* Auth routes */}
         <Route
           path="/auth"
           element={
@@ -66,6 +69,8 @@ function App() {
           <Route path="login" element={<AuthLogin />} />
           <Route path="register" element={<AuthRegister />} />
         </Route>
+
+        {/* Admin routes */}
         <Route
           path="/admin"
           element={
@@ -79,6 +84,8 @@ function App() {
           <Route path="orders" element={<AdminOrders />} />
           <Route path="features" element={<AdminFeatures />} />
         </Route>
+
+        {/* Shop routes */}
         <Route
           path="/shop"
           element={
@@ -91,11 +98,15 @@ function App() {
           <Route path="listing" element={<ShoppingListing />} />
           <Route path="checkout" element={<ShoppingCheckout />} />
           <Route path="account" element={<ShoppingAccount />} />
-          <Route path="paypal-return" element={<PaypalReturnPage />} />
+          {/* <Route path="paypal-return" element={<PaypalReturnPage />} /> */}
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
         </Route>
+
+        {/* Unauthenticated page */}
         <Route path="/unauth-page" element={<UnauthPage />} />
+
+        {/* 404 fallback */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

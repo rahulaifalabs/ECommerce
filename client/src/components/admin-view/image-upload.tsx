@@ -1,12 +1,22 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { FileIcon, UploadCloudIcon, XIcon } from "lucide-react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useEffect, useRef } from "react";
 import { Button } from "../ui/button";
-import axios from "axios";
 import { Skeleton } from "../ui/skeleton";
 import api from "@/utils/api";
+
+// ✅ Props definition
+interface ProductImageUploadProps {
+  imageFile: File | null;
+  setImageFile: (file: File | null) => void;
+  imageLoadingState: boolean;
+  setImageLoadingState: (loading: boolean) => void;
+  uploadedImageUrl: string | null;
+  setUploadedImageUrl: (url: string | null) => void;
+  isEditMode: boolean;
+  isCustomStyling?: boolean;
+}
 
 function ProductImageUpload({
   imageFile,
@@ -17,52 +27,47 @@ function ProductImageUpload({
   setImageLoadingState,
   isEditMode,
   isCustomStyling = false,
-}) {
-  const inputRef = useRef(null);
+}: ProductImageUploadProps) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  console.log(isEditMode, "isEditMode");
-
-  function handleImageFileChange(event) {
-    console.log(event.target.files, "event.target.files");
+  // ✅ Handle file selection
+  function handleImageFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0];
-    console.log(selectedFile);
-
     if (selectedFile) setImageFile(selectedFile);
   }
 
-  function handleDragOver(event) {
+  // ✅ Drag & drop handlers
+  function handleDragOver(event: React.DragEvent<HTMLDivElement>) {
     event.preventDefault();
   }
 
-  function handleDrop(event) {
+  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files?.[0];
     if (droppedFile) setImageFile(droppedFile);
   }
 
+  // ✅ Remove selected image
   function handleRemoveImage() {
     setImageFile(null);
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    if (inputRef.current) inputRef.current.value = "";
   }
 
+  // ✅ Upload image to server
   async function uploadImage() {
+    if (!imageFile) return;
     try {
       setImageLoadingState(true);
       const data = new FormData();
       data.append("my_file", imageFile);
-      const response = await api.post(
+
+      const response = await api.post<{ success: boolean; result: { url: string } }>(
         "/admin/products/upload-image",
         data,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
-      console.log(response, "response");
 
       if (response?.data?.success) {
-        // use url returned by server that serves from /uploads
         setUploadedImageUrl(response.data.result.url);
       }
     } catch (err) {
@@ -72,21 +77,18 @@ function ProductImageUpload({
     }
   }
 
+  // ✅ Trigger upload when file changes
   useEffect(() => {
-    if (imageFile !== null) uploadImage();
+    if (imageFile) uploadImage();
   }, [imageFile]);
 
   return (
-    <div
-      className={`w-full  mt-4 ${isCustomStyling ? "" : "max-w-md mx-auto"}`}
-    >
+    <div className={`w-full mt-4 ${isCustomStyling ? "" : "max-w-md mx-auto"}`}>
       <Label className="text-lg font-semibold mb-2 block">Upload Image</Label>
       <div
         onDragOver={handleDragOver}
         onDrop={handleDrop}
-        className={`${
-          isEditMode ? "opacity-60" : ""
-        } border-2 border-dashed rounded-lg p-4`}
+        className={`${isEditMode ? "opacity-60" : ""} border-2 border-dashed rounded-lg p-4`}
       >
         <Input
           id="image-upload"
@@ -96,12 +98,11 @@ function ProductImageUpload({
           onChange={handleImageFileChange}
           disabled={isEditMode}
         />
+
         {!imageFile ? (
           <Label
             htmlFor="image-upload"
-            className={`${
-              isEditMode ? "cursor-not-allowed" : ""
-            } flex flex-col items-center justify-center h-32 cursor-pointer`}
+            className={`${isEditMode ? "cursor-not-allowed" : ""} flex flex-col items-center justify-center h-32 cursor-pointer`}
           >
             <UploadCloudIcon className="w-10 h-10 text-muted-foreground mb-2" />
             <span>Drag & drop or click to upload image</span>
@@ -112,8 +113,8 @@ function ProductImageUpload({
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <FileIcon className="w-8 text-primary mr-2 h-8" />
+              <p className="text-sm font-medium">{imageFile.name}</p>
             </div>
-            <p className="text-sm font-medium">{imageFile.name}</p>
             <Button
               variant="ghost"
               size="icon"

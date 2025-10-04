@@ -1,76 +1,100 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import api from "@/utils/api";
 
-const initialState = {
+// ---------------- Types ----------------
+// ------------------- Types -------------------
+export interface Product {
+  _id: string;
+  title: string;
+  category: string;
+  brand: string;
+  image: string;
+  price: number;
+  salePrice?: number; // optional
+  description?: string; // optional to match slice
+  totalStock?: number;  // optional if slice may not have it
+}
+
+
+
+
+interface FeatureImage {
+  _id: string;
+  image: string;
+}
+
+interface UserObj {
+  id: string;
+  name: string;
+  email: string;
+}
+
+
+interface ProductsState {
+  isLoading: boolean;
+  productList: Product[];
+  productDetails: Product | null;
+}
+
+// ---------------- Initial State ----------------
+const initialState: ProductsState = {
   isLoading: false,
   productList: [],
   productDetails: null,
 };
 
-export const fetchAllFilteredProducts = createAsyncThunk(
-  "/products/fetchAllProducts",
-  async ({ filterParams, sortParams }) => {
-    console.log(fetchAllFilteredProducts, "fetchAllFilteredProducts");
+// ---------------- Async Thunks ----------------
+export const fetchAllFilteredProducts = createAsyncThunk<
+  { data: Product[] },
+  { filterParams: Record<string, string>; sortParams: string }
+>("/products/fetchAllProducts", async ({ filterParams, sortParams }) => {
+  const query = new URLSearchParams({
+    ...filterParams,
+    sortBy: sortParams,
+  });
 
-    const query = new URLSearchParams({
-      ...filterParams,
-      sortBy: sortParams,
-    });
+  const result = await api.get(`/shop/products/get?${query}`);
+  return result.data;
+});
 
-    const result = await api.get(
-      `/shop/products/get?${query}`
-    );
+export const fetchProductDetails = createAsyncThunk<
+  { data: Product },
+  { id: string }
+>("/products/fetchProductDetails", async ({ id }) => {
+  const result = await api.get(`/shop/products/get/${id}`);
+  return result.data;
+});
 
-    console.log(result);
-
-    return result?.data;
-  }
-);
-
-export const fetchProductDetails = createAsyncThunk<{},
-{id:string}
->(
-  "/products/fetchProductDetails",
-  async (id) => {
-    const result = await api.get(
-      `/shop/products/get/${id}`
-    );
-
-    return result?.data;
-  }
-);
-
+// ---------------- Slice ----------------
 const shoppingProductSlice = createSlice({
   name: "shoppingProducts",
   initialState,
   reducers: {
-    setProductDetails: (state) => {
-      state.productDetails = null;
+    setProductDetails: (state, action: PayloadAction<Product | null>) => {
+      state.productDetails = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAllFilteredProducts.pending, (state, action) => {
+      .addCase(fetchAllFilteredProducts.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(fetchAllFilteredProducts.fulfilled, (state, action) => {
         state.isLoading = false;
         state.productList = action.payload.data;
       })
-      .addCase(fetchAllFilteredProducts.rejected, (state, action) => {
+      .addCase(fetchAllFilteredProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
       })
-      .addCase(fetchProductDetails.pending, (state, action) => {
+      .addCase(fetchProductDetails.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(fetchProductDetails.fulfilled, (state, action) => {
         state.isLoading = false;
         state.productDetails = action.payload.data;
       })
-      .addCase(fetchProductDetails.rejected, (state, action) => {
+      .addCase(fetchProductDetails.rejected, (state) => {
         state.isLoading = false;
         state.productDetails = null;
       });

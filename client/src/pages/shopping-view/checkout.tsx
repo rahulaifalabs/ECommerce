@@ -1,4 +1,3 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import Address from "@/components/shopping-view/address";
 import img from "../../assets/account.jpg";
 import { useDispatch, useSelector } from "react-redux";
@@ -6,88 +5,126 @@ import UserCartItemsContent from "@/components/shopping-view/cart-items-content"
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { createNewOrder } from "@/store/shop/order-slice";
-import { Navigate } from "react-router-dom";
+import { RootState, AppDispatch } from "@/store/store";
 import { useToast } from "@/components/ui/use-toast";
 
+// ⬇️ import CartItem type from your slice (not redefine it)
+import { CartItem } from "@/store/shop/cart-slice";
+
+// ------------------- Types -------------------
+interface AddressType {
+  _id: string;
+  address: string;
+  city: string;
+  pincode: string;
+  phone: string;
+  notes?: string;
+}
+
+interface OrderData {
+  userId: string | undefined;
+  cartItems: {
+    productId: string;
+    title: string;
+    image: string;
+    price: number;
+    quantity: number;
+  }[];
+  addressInfo: {
+    addressId: string | undefined;
+    address: string | undefined;
+    city: string | undefined;
+    pincode: string | undefined;
+    phone: string | undefined;
+    notes?: string;
+  };
+  orderStatus: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  totalAmount: number;
+  orderDate: Date;
+  orderUpdateDate: Date;
+  paymentId: string;
+  payerId: string;
+}
+
+// ------------------- Component -------------------
 function ShoppingCheckout() {
-  const { cartItems } = useSelector((state) => state.shopCart);
-  const { user } = useSelector((state) => state.auth);
-  const { approvalURL } = useSelector((state) => state.shopOrder);
-  const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
-  const [isPaymentStart, setIsPaymemntStart] = useState(false);
-  const dispatch = useDispatch();
+  const { cartItems } = useSelector(
+    (state: RootState) => state.shopCart
+  ) as { cartItems: CartItem[] }; // ✅ Now both sides use the same type
+
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { approvalURL } = useSelector(
+    (state: RootState) => state.shopOrder
+  ) as { approvalURL: string | null };
+
+  const [currentSelectedAddress, setCurrentSelectedAddress] =
+    useState<AddressType | null>(null);
+  const [isPaymentStart, setIsPaymentStart] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
 
-  console.log(currentSelectedAddress, "cartItems");
+const totalCartAmount: number =
+  cartItems && cartItems.length > 0
+    ? cartItems.reduce(
+        (sum, currentItem) =>
+          sum + ((currentItem.salePrice ?? currentItem.price) * currentItem.quantity),
+        0
+      )
+    : 0;
 
-  const totalCartAmount =
-    cartItems && cartItems.items && cartItems.items.length > 0
-      ? cartItems.items.reduce(
-          (sum, currentItem) =>
-            sum +
-            (currentItem?.salePrice > 0
-              ? currentItem?.salePrice
-              : currentItem?.price) *
-              currentItem?.quantity,
-          0
-        )
-      : 0;
 
   function handleInitiatePaypalPayment() {
-    if (cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       toast({
         title: "Your cart is empty. Please add items to proceed",
         variant: "destructive",
       });
-
       return;
     }
+
     if (currentSelectedAddress === null) {
       toast({
         title: "Please select one address to proceed.",
         variant: "destructive",
       });
-
       return;
     }
 
-    const orderData = {
-      userId: user?.id,
-      cartId: cartItems?._id,
-      cartItems: cartItems.items.map((singleCartItem) => ({
-        productId: singleCartItem?.productId,
-        title: singleCartItem?.title,
-        image: singleCartItem?.image,
-        price:
-          singleCartItem?.salePrice > 0
-            ? singleCartItem?.salePrice
-            : singleCartItem?.price,
-        quantity: singleCartItem?.quantity,
-      })),
-      addressInfo: {
-        addressId: currentSelectedAddress?._id,
-        address: currentSelectedAddress?.address,
-        city: currentSelectedAddress?.city,
-        pincode: currentSelectedAddress?.pincode,
-        phone: currentSelectedAddress?.phone,
-        notes: currentSelectedAddress?.notes,
-      },
-      orderStatus: "pending",
-      paymentMethod: "paypal",
-      paymentStatus: "pending",
-      totalAmount: totalCartAmount,
-      orderDate: new Date(),
-      orderUpdateDate: new Date(),
-      paymentId: "",
-      payerId: "",
-    };
+    const orderData: OrderData = {
+  userId: user?.id,
+  cartItems: cartItems.map((singleCartItem) => ({
+    productId: singleCartItem.productId,
+    title: singleCartItem.title ?? "", // fallback to empty string
+    image: singleCartItem.image ?? "", // fallback to empty string
+    price: singleCartItem.salePrice ?? singleCartItem.price ?? 0, // fallback to 0 if undefined
+    quantity: singleCartItem.quantity,
+  })),
+  addressInfo: {
+    addressId: currentSelectedAddress?._id,
+    address: currentSelectedAddress?.address ?? "",
+    city: currentSelectedAddress?.city ?? "",
+    pincode: currentSelectedAddress?.pincode ?? "",
+    phone: currentSelectedAddress?.phone ?? "",
+    notes: currentSelectedAddress?.notes,
+  },
+  orderStatus: "pending",
+  paymentMethod: "paypal",
+  paymentStatus: "pending",
+  totalAmount: totalCartAmount,
+  orderDate: new Date(),
+  orderUpdateDate: new Date(),
+  paymentId: "",
+  payerId: "",
+};
+
 
     dispatch(createNewOrder(orderData)).then((data) => {
-      console.log(data, "rahul");
-      if (data?.payload?.success) {
-        setIsPaymemntStart(true);
+      if ((data as any)?.payload?.success) {
+        setIsPaymentStart(true);
       } else {
-        setIsPaymemntStart(false);
+        setIsPaymentStart(false);
       }
     });
   }
@@ -107,9 +144,9 @@ function ShoppingCheckout() {
           setCurrentSelectedAddress={setCurrentSelectedAddress}
         />
         <div className="flex flex-col gap-4">
-          {cartItems && cartItems.items && cartItems.items.length > 0
-            ? cartItems.items.map((item) => (
-                <UserCartItemsContent cartItem={item} />
+          {cartItems && cartItems.length > 0
+            ? cartItems.map((item) => (
+                <UserCartItemsContent key={item.productId} cartItem={item} />
               ))
             : null}
           <div className="mt-8 space-y-4">

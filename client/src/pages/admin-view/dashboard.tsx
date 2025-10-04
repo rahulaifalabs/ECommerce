@@ -1,4 +1,3 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import ProductImageUpload from "@/components/admin-view/image-upload";
 import { Button } from "@/components/ui/button";
 import { addFeatureImage, getFeatureImages } from "@/store/common-slice";
@@ -6,21 +5,31 @@ import { AppDispatch, RootState } from "@/store/store";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-function AdminDashboard() {
-  const [imageFile, setImageFile] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
-  const [imageLoadingState, setImageLoadingState] = useState(false);
-  const dispatch = useDispatch<AppDispatch>();
-  const { featureImageList } = useSelector((state:RootState) => state.commonFeature);
+// ---------------- Types ----------------
+interface FeatureImage {
+  _id: string;
+  image: string;
+}
 
-  console.log(uploadedImageUrl, "uploadedImageUrl");
+function AdminDashboard() {
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [imageLoadingState, setImageLoadingState] = useState<boolean>(false);
+
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { featureImageList } = useSelector(
+    (state: RootState) => state.commonFeature
+  ) as { featureImageList: FeatureImage[] };
 
   function handleUploadFeatureImage() {
-    dispatch(addFeatureImage(uploadedImageUrl)).then((data) => {
+    if (!uploadedImageUrl) return;
+
+    dispatch(addFeatureImage(uploadedImageUrl)).then((data: any) => {
       if (data?.payload?.success) {
         dispatch(getFeatureImages());
         setImageFile(null);
-        setUploadedImageUrl("");
+        setUploadedImageUrl(null);
       }
     });
   }
@@ -28,8 +37,6 @@ function AdminDashboard() {
   useEffect(() => {
     dispatch(getFeatureImages());
   }, [dispatch]);
-
-  console.log(featureImageList, "featureImageList");
 
   return (
     <div>
@@ -42,8 +49,8 @@ function AdminDashboard() {
         imageLoadingState={imageLoadingState}
         isCustomStyling={true}
         isEditMode={false}
-        // isEditMode={currentEditedId !== null}
       />
+
       <Button
         onClick={handleUploadFeatureImage}
         className="mt-5 w-full"
@@ -51,18 +58,23 @@ function AdminDashboard() {
       >
         Upload
       </Button>
+
       <div className="flex flex-col gap-4 mt-5">
-        {featureImageList && featureImageList.length > 0
-          ? featureImageList.map((featureImgItem, index) => (
-              <div key={featureImgItem._id || index} className="relative">
-                <img
-                src={(featureImgItem.image || '').startsWith('/') ? `http://localhost:5001${featureImgItem.image}` : featureImgItem.image}
-                  className="w-full h-[300px] object-cover rounded-t-lg"
-                  alt={`Feature image ${index + 1}`}
-                />
-              </div>
-            ))
-          : null}
+        {featureImageList && featureImageList.length > 0 ? (
+          featureImageList.map((featureImgItem, index) => (
+            <div key={featureImgItem._id || index} className="relative">
+              <img
+                src={
+                  (featureImgItem.image || "").startsWith("/")
+                    ? `http://localhost:5001${featureImgItem.image}`
+                    : featureImgItem.image
+                }
+                className="w-full h-[300px] object-cover rounded-t-lg"
+                alt={`Feature image ${index + 1}`}
+              />
+            </div>
+          ))
+        ) : null}
       </div>
     </div>
   );

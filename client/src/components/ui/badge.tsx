@@ -1,9 +1,8 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
-import * as React from "react"
-import { cva } from "class-variance-authority";
+import * as React from "react";
+import { cva, VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
-
+// Define badge variants using CVA
 const badgeVariants = cva(
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
@@ -22,14 +21,16 @@ const badgeVariants = cva(
       variant: "default",
     },
   }
-)
+);
 
-function Badge({
-  className,
-  variant,
-  ...props
-}) {
-  return (<div className={cn(badgeVariants({ variant }), className)} {...props} />);
-}
+// ✅ Type Props
+interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
 
-export { Badge, badgeVariants }
+// ✅ Badge component with typed props
+const Badge: React.FC<BadgeProps> = ({ className, variant, ...props }) => {
+  return <div className={cn(badgeVariants({ variant }), className ?? "")} {...props} />;
+};
+
+export { Badge, badgeVariants };

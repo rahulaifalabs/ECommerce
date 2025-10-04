@@ -1,45 +1,55 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
+// AUTO-CONVERTED: extension changed to TypeScript. Fully typed
 import CommonForm from "@/components/common/form";
 import { useToast } from "@/components/ui/use-toast";
 import { registerFormControls } from "@/config";
-import { registerUser } from "@/store/auth-slice";
-import { useState } from "react";
+import { registerUser, AuthResponse, AuthCredentials } from "@/store/auth-slice";
+import { useState, FormEvent } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { AppDispatch } from "@/store/store";
 
-const initialState = {
+// ------------------- Types -------------------
+interface RegisterFormData extends AuthCredentials {
+  userName: string;
+}
+
+// ------------------- Initial State -------------------
+const initialState: RegisterFormData = {
   userName: "",
   email: "",
   password: "",
 };
 
+// ------------------- Component -------------------
 function AuthRegister() {
-  const [formData, setFormData] = useState(initialState);
-  const dispatch = useDispatch();
+  const [formData, setFormData] = useState<RegisterFormData>(initialState);
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  function onSubmit(event) {
+  // ------------------- Form Submit -------------------
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     dispatch(registerUser(formData)).then((data) => {
-      if (data?.payload?.success) {
+      const payload = (data as { payload: AuthResponse }).payload;
+
+      if (payload?.success) {
         toast({
-          title: data?.payload?.message,
+          title: payload.message,
         });
         navigate("/auth/login");
       } else {
         toast({
-          title: data?.payload?.message,
+          title: payload?.message ?? "Registration failed",
           variant: "destructive",
         });
       }
     });
   }
 
-  console.log(formData);
-
   return (
     <div className="mx-auto w-full max-w-md space-y-6">
+      {/* Header */}
       <div className="text-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Create new account
@@ -54,9 +64,11 @@ function AuthRegister() {
           </Link>
         </p>
       </div>
+
+      {/* Register Form */}
       <CommonForm
         formControls={registerFormControls}
-        buttonText={"Sign Up"}
+        buttonText="Sign Up"
         formData={formData}
         setFormData={setFormData}
         onSubmit={onSubmit}

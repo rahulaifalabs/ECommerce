@@ -1,19 +1,24 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { AlignJustify, LogOut } from "lucide-react";
 import { Button } from "../ui/button";
 import { useDispatch } from "react-redux";
-import { logoutUser } from "../../store/auth-slice/index";
-import {useNavigate} from "react-router-dom"
+import { logoutUser } from "../../store/auth-slice";
+import { useNavigate } from "react-router-dom";
+import { AppDispatch } from "@/store/store";
 
 
+// ✅ Props type
+type AdminHeaderProps = {
+  setOpen: (value: boolean) => void; // if it's just a callback
+  // OR setOpen: React.Dispatch<React.SetStateAction<boolean>>; // if from useState
+};
 
-function AdminHeader({ setOpen}) {
-  const dispatch = useDispatch()
-  const navigate= useNavigate();
+function AdminHeader({ setOpen }: AdminHeaderProps) {
+  const dispatch = useDispatch<AppDispatch>(); // ✅ typed dispatch
+  const navigate = useNavigate();
 
   function handleLogout() {
-    navigate('/auth/login');
-    dispatch(logoutUser())
+    navigate("/auth/login");
+    dispatch(logoutUser()); // ✅ no TS error now
   }
 
   return (

@@ -9,7 +9,7 @@ function CheckAuth({
   children,
 }: {
   isAuthenticated: boolean;
-  user: UserObj;
+  user: UserObj | null;
   children?: ReactNode;
 }) {
   const location = useLocation();

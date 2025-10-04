@@ -1,4 +1,3 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -19,26 +18,63 @@ import {
   resetOrderDetails,
 } from "@/store/shop/order-slice";
 import { Badge } from "../ui/badge";
+import { RootState, AppDispatch } from "@/store/store";
 
+// ---------------- Types ----------------
+interface User {
+  id: string;
+  userName: string;
+}
+
+interface CartItem {
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+}
+
+interface AddressInfo {
+  address?: string;
+  city?: string;
+  pincode?: string;
+  phone?: string;
+  notes?: string;
+}
+
+interface Order {
+  _id: string;
+  orderDate: string;
+  totalAmount: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  orderStatus: "confirmed" | "rejected" | string;
+  cartItems?: CartItem[];
+  addressInfo?: AddressInfo;
+}
+
+// ---------------- Component ----------------
 function ShoppingOrders() {
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const { orderList, orderDetails } = useSelector((state) => state.shopOrder);
+  const dispatch = useDispatch<AppDispatch>();
 
-  function handleFetchOrderDetails(getId) {
+  const { user } = useSelector((state: RootState) => state.auth) as { user: User | null };
+  const { orderList, orderDetails } = useSelector(
+    (state: RootState) => state.shopOrder
+  );
+
+  const handleFetchOrderDetails = (getId: string) => {
     dispatch(getOrderDetails(getId));
-  }
+  };
 
   useEffect(() => {
-    dispatch(getAllOrdersByUserId(user?.id));
-  }, [dispatch]);
+    if (user?.id) {
+      dispatch(getAllOrdersByUserId(user.id));
+    }
+  }, [dispatch, user?.id]);
 
   useEffect(() => {
     if (orderDetails !== null) setOpenDetailsDialog(true);
   }, [orderDetails]);
-
-  console.log(orderDetails, "orderDetails");
 
   return (
     <Card>
@@ -59,46 +95,50 @@ function ShoppingOrders() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orderList && orderList.length > 0
-              ? orderList.map((orderItem) => (
-                  <TableRow>
-                    <TableCell>{orderItem?._id}</TableCell>
-                    <TableCell>{orderItem?.orderDate.split("T")[0]}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={`py-1 px-3 ${
-                          orderItem?.orderStatus === "confirmed"
-                            ? "bg-green-500"
-                            : orderItem?.orderStatus === "rejected"
-                            ? "bg-red-600"
-                            : "bg-black"
-                        }`}
+            {orderList && orderList.length > 0 ? (
+              orderList.map((orderItem: Order) => (
+                <TableRow key={orderItem._id}>
+                  <TableCell>{orderItem._id}</TableCell>
+                  <TableCell>{orderItem.orderDate.split("T")[0]}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`py-1 px-3 ${
+                        orderItem.orderStatus === "confirmed"
+                          ? "bg-green-500"
+                          : orderItem.orderStatus === "rejected"
+                          ? "bg-red-600"
+                          : "bg-black"
+                      }`}
+                    >
+                      {orderItem.orderStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>${orderItem.totalAmount}</TableCell>
+                  <TableCell>
+                    <Dialog
+                      open={openDetailsDialog}
+                      onOpenChange={() => {
+                        setOpenDetailsDialog(false);
+                        dispatch(resetOrderDetails());
+                      }}
+                    >
+                      <Button
+                        onClick={() => handleFetchOrderDetails(orderItem._id)}
                       >
-                        {orderItem?.orderStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>${orderItem?.totalAmount}</TableCell>
-                    <TableCell>
-                      <Dialog
-                        open={openDetailsDialog}
-                        onOpenChange={() => {
-                          setOpenDetailsDialog(false);
-                          dispatch(resetOrderDetails());
-                        }}
-                      >
-                        <Button
-                          onClick={() =>
-                            handleFetchOrderDetails(orderItem?._id)
-                          }
-                        >
-                          View Details
-                        </Button>
+                        View Details
+                      </Button>
+                      {orderDetails && (
                         <ShoppingOrderDetailsView orderDetails={orderDetails} />
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))
-              : null}
+                      )}
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5}>No orders found</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

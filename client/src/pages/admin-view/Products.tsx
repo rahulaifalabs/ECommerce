@@ -1,5 +1,5 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
-import React from "react";
+import React, { Fragment, useEffect, useState } from "react";
+// import ProductImageUpload from "@/components/admin-view/image-upload";
 import ProductImageUpload from "@/components/admin-view/image-upload";
 import CommonForm from "@/components/common/form";
 import { Button } from "@/components/ui/button";
@@ -17,23 +17,11 @@ import {
   editProduct,
   fetchAllProducts,
 } from "@/store/admin/products-slice";
-import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/store/store";
+import { AppDispatch, RootState } from "@/store/store";
 import AdminProductTile from "@/components/admin-view/Product-tile";
 
-const initialFormData = {
-  image: "",
-  title: "",
-  description: "",
-  category: "",
-  brand: "",
-  price: "",
-  salePrice: "",
-  totalStock: "",
-  averageReview: 0,
-};
-
+// ---------------- Types ----------------
 export interface Product {
   id: string;
   image: string;
@@ -45,38 +33,54 @@ export interface Product {
   salePrice: string;
   totalStock: string;
   averageReview: number;
-  // Add any other fields your product object contains
 }
+
+const initialFormData: Omit<Product, "id"> = {
+  image: "",
+  title: "",
+  description: "",
+  category: "",
+  brand: "",
+  price: "",
+  salePrice: "",
+  totalStock: "",
+  averageReview: 0,
+};
 
 function AdminProducts() {
   const [openCreateProductsDialog, setOpenCreateProductsDialog] =
-    useState(false);
+    useState<boolean>(false);
   const [formData, setFormData] = useState(initialFormData);
-  const [imageFile, setImageFile] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
-  const [imageLoadingState, setImageLoadingState] = useState(false);
-  const [currentEditedId, setCurrentEditedId] = useState<string>();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [imageLoadingState, setImageLoadingState] = useState<boolean>(false);
+  const [currentEditedId, setCurrentEditedId] = useState<string | null>(null);
 
-  const { productList } = useSelector((state: any) => state.adminProducts);
   const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+
+  const productList = useSelector(
+    (state: RootState) => state.adminProducts.productList
+  ) as Product[];
+
+  // Form submit handler
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (currentEditedId !== null) {
+    if (currentEditedId) {
       dispatch(
         editProduct({
           id: currentEditedId,
           formData,
-        } as any) // If your thunk expects a specific type, replace 'any' with the correct type
+        } as any)
       ).then((data: any) => {
-        console.log(data, "edit");
-
         if (data?.payload?.success) {
           dispatch(fetchAllProducts());
           setFormData(initialFormData);
           setOpenCreateProductsDialog(false);
-          setCurrentEditedId("");
+          setCurrentEditedId(null);
+          setUploadedImageUrl(null);
+          setImageFile(null);
         }
       });
     } else {
@@ -84,84 +88,86 @@ function AdminProducts() {
         addNewProduct({
           ...formData,
           image: uploadedImageUrl,
-        } as any) // If your thunk expects a specific type, replace 'any' with the correct type
+        } as any)
       ).then((data: any) => {
         if (data?.payload?.success) {
           dispatch(fetchAllProducts());
           setOpenCreateProductsDialog(false);
-          setImageFile(null);
           setFormData(initialFormData);
-          toast({
-            title: "Product add successfully",
-          });
+          setUploadedImageUrl(null);
+          setImageFile(null);
+          toast({ title: "Product added successfully" });
         }
       });
     }
-  }
-  function handleDelete(getCurrentProductId: string) {
-    if (!getCurrentProductId) return;
-    dispatch(deleteProduct(getCurrentProductId)).then((data: any) => {
+  };
+
+  // Delete product handler
+  const handleDelete = (id: string) => {
+    if (!id) return;
+    dispatch(deleteProduct(id)).then((data: any) => {
       if (data?.payload?.success) {
         dispatch(fetchAllProducts());
       }
     });
-  }
+  };
 
-  function isFormValid() {
+  const isFormValid = (): boolean => {
     return Object.keys(formData)
-      .filter((currentKey) => currentKey !== "averageReview")
-      .map((key) => formData[key as keyof typeof formData] !== "")
-      .every((item) => item);
-  }
+      .filter((key) => key !== "averageReview")
+      .every((key) => Boolean(formData[key as keyof typeof formData]));
+  };
 
   return (
     <Fragment>
-      {/* Add your page layout and controls here */}
       <div className="mb-4 flex items-center justify-between">
         <Button onClick={() => setOpenCreateProductsDialog(true)}>
           Add Product
         </Button>
       </div>
+
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {productList && productList.length > 0
-          ? productList.map((productItem: Product) => (
-              <AdminProductTile
-                key={productItem.id}
-                setFormData={(product: Product) =>
-                  setFormData({
-                    image: product.image,
-                    title: product.title,
-                    description: product.description,
-                    category: product.category,
-                    brand: product.brand,
-                    price: product.price,
-                    salePrice: product.salePrice,
-                    totalStock: product.totalStock,
-                    averageReview: product.averageReview,
-                  })
-                }
-                setOpenCreateProductsDialog={setOpenCreateProductsDialog}
-                setCurrentEditedId={setCurrentEditedId}
-                product={productItem}
-                handleDelete={handleDelete}
-              />
-            ))
-          : null}
+        {productList?.map((product) => (
+          <AdminProductTile
+            key={product.id}
+            product={product}
+            setFormData={(p: Product) =>
+              setFormData({
+                image: p.image,
+                title: p.title,
+                description: p.description,
+                category: p.category,
+                brand: p.brand,
+                price: p.price,
+                salePrice: p.salePrice,
+                totalStock: p.totalStock,
+                averageReview: p.averageReview,
+              })
+            }
+            setOpenCreateProductsDialog={setOpenCreateProductsDialog}
+            setCurrentEditedId={setCurrentEditedId}
+            handleDelete={handleDelete}
+          />
+        ))}
       </div>
+
       <Sheet
         open={openCreateProductsDialog}
         onOpenChange={() => {
           setOpenCreateProductsDialog(false);
-          setCurrentEditedId("");
+          setCurrentEditedId(null);
           setFormData(initialFormData);
+          setUploadedImageUrl(null);
+          setImageFile(null);
         }}
       >
         <SheetContent side="right" className="overflow-auto">
           <SheetHeader>
             <SheetTitle>
-              {currentEditedId !== null ? "Edit Product" : "Add New Product"}
+              {currentEditedId ? "Edit Product" : "Add New Product"}
             </SheetTitle>
           </SheetHeader>
+
           <ProductImageUpload
             imageFile={imageFile}
             setImageFile={setImageFile}
@@ -169,15 +175,16 @@ function AdminProducts() {
             setUploadedImageUrl={setUploadedImageUrl}
             setImageLoadingState={setImageLoadingState}
             imageLoadingState={imageLoadingState}
-            isEditMode={currentEditedId !== null}
+            isEditMode={Boolean(currentEditedId)}
           />
+
           <div className="py-6">
             <CommonForm
               onSubmit={onSubmit}
               formData={formData}
               setFormData={setFormData}
-              buttonText={currentEditedId !== null ? "Edit" : "Add"}
               formControls={addProductFormElements}
+              buttonText={currentEditedId ? "Edit" : "Add"}
               isBtnDisabled={!isFormValid()}
             />
           </div>
@@ -186,4 +193,5 @@ function AdminProducts() {
     </Fragment>
   );
 }
+
 export default AdminProducts;
