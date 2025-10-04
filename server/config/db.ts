@@ -1,5 +1,5 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
-const mongoose = require('mongoose');
+
+const mongoose = require('mongoose')
 
 const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce'; // Replace with your actual connection string
 mongoose.connect(uri, {

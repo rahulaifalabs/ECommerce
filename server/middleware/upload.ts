@@ -1,7 +1,9 @@
 // server/middleware/upload.ts
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+
+
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 // Create upload directory if not exists
 const uploadDir = path.join(__dirname, "../../uploads");
