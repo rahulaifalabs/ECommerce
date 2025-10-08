@@ -7,7 +7,7 @@ import api from "@/utils/api";
 export interface CartItem {
   productId: string;
     title: string;
-
+  items: string;
   name: string;
   price: number;
   quantity: number;

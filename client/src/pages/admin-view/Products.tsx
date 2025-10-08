@@ -1,6 +1,5 @@
-import React, { Fragment, useEffect, useState } from "react";
-// import ProductImageUpload from "@/components/admin-view/image-upload";
-import ProductImageUpload from "@/components/admin-view/image-upload";
+import React, { Fragment, useState, useEffect } from "react";
+import ProductImageUpload from "@/components/admin-view/Image-upload";
 import CommonForm from "@/components/common/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import {
   editProduct,
   fetchAllProducts,
 } from "@/store/admin/products-slice";
+import { addFeatureImage, getFeatureImages } from "@/store/common-slice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store/store";
 import AdminProductTile from "@/components/admin-view/Product-tile";
@@ -35,6 +35,11 @@ export interface Product {
   averageReview: number;
 }
 
+interface FeatureImage {
+  _id: string;
+  image: string;
+}
+
 const initialFormData: Omit<Product, "id"> = {
   image: "",
   title: "",
@@ -48,57 +53,101 @@ const initialFormData: Omit<Product, "id"> = {
 };
 
 function AdminProducts() {
-  const [openCreateProductsDialog, setOpenCreateProductsDialog] =
-    useState<boolean>(false);
+  // -- Dashboard state --
+  const [dashImageFile, setDashImageFile] = useState<File | null>(null);
+  const [dashUploadedImageUrl, setDashUploadedImageUrl] = useState<string | null>(null);
+  const [dashImageLoadingState, setDashImageLoadingState] = useState<boolean>(false);
+
+  // -- Product form state --
+  const [openCreateProductsDialog, setOpenCreateProductsDialog] = useState(false);
   const [formData, setFormData] = useState(initialFormData);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
-  const [imageLoadingState, setImageLoadingState] = useState<boolean>(false);
+  const [imageLoadingState, setImageLoadingState] = useState(false);
   const [currentEditedId, setCurrentEditedId] = useState<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
 
+  // Dashboard feature images from store
+  const { featureImageList } = useSelector(
+    (state: RootState) => state.commonFeature
+  ) as { featureImageList: FeatureImage[] };
+
+  // Product list from store
   const productList = useSelector(
     (state: RootState) => state.adminProducts.productList
   ) as Product[];
 
-  // Form submit handler
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  // ---- Dashboard: Upload feature image handler ----
+  function handleUploadFeatureImage() {
+    if (!dashUploadedImageUrl) return;
+
+    dispatch(addFeatureImage(dashUploadedImageUrl)).then((data: any) => {
+      if (data?.payload?.success) {
+        dispatch(getFeatureImages());
+        setDashImageFile(null);
+        setDashUploadedImageUrl(null);
+      }
+    });
+  }
+
+  // Fetch dashboard feature images on mount
+  useEffect(() => {
+    dispatch(getFeatureImages());
+  }, [dispatch]);
+
+  // ---- Product form submit handler ----
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (currentEditedId) {
-      dispatch(
-        editProduct({
-          id: currentEditedId,
-          formData,
-        } as any)
-      ).then((data: any) => {
-        if (data?.payload?.success) {
-          dispatch(fetchAllProducts());
-          setFormData(initialFormData);
-          setOpenCreateProductsDialog(false);
-          setCurrentEditedId(null);
-          setUploadedImageUrl(null);
-          setImageFile(null);
+    try {
+      if (currentEditedId) {
+        // Edit Product Mode
+        const resultAction = await dispatch(
+          editProduct({
+            id: currentEditedId,
+            formData,
+          } as any)
+        );
+
+        if (resultAction?.payload?.success) {
+          await dispatch(fetchAllProducts());
+          toast({ title: "Product updated successfully" });
+        } else {
+          toast({ title: "Failed to update product", variant: "destructive" });
         }
-      });
-    } else {
-      dispatch(
-        addNewProduct({
-          ...formData,
-          image: uploadedImageUrl,
-        } as any)
-      ).then((data: any) => {
-        if (data?.payload?.success) {
-          dispatch(fetchAllProducts());
-          setOpenCreateProductsDialog(false);
-          setFormData(initialFormData);
-          setUploadedImageUrl(null);
-          setImageFile(null);
+      } else {
+        // Add New Product Mode
+        if (!uploadedImageUrl) {
+          toast({ title: "Please upload an image before adding", variant: "destructive" });
+          return;
+        }
+
+        const resultAction = await dispatch(
+          addNewProduct({
+            ...formData,
+            image: uploadedImageUrl,
+          } as any)
+        );
+
+        if (resultAction?.payload?.success) {
+          await dispatch(fetchAllProducts());
           toast({ title: "Product added successfully" });
+        } else {
+          toast({ title: "Failed to add product", variant: "destructive" });
         }
-      });
+      }
+
+      // Reset form & close modal
+      setFormData(initialFormData);
+      setUploadedImageUrl(null);
+      setImageFile(null);
+      setCurrentEditedId(null);
+      setOpenCreateProductsDialog(false);
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Something went wrong", variant: "destructive" });
     }
   };
 
@@ -108,10 +157,12 @@ function AdminProducts() {
     dispatch(deleteProduct(id)).then((data: any) => {
       if (data?.payload?.success) {
         dispatch(fetchAllProducts());
+        toast({ title: "Product deleted successfully" });
       }
     });
   };
 
+  // Form validation
   const isFormValid = (): boolean => {
     return Object.keys(formData)
       .filter((key) => key !== "averageReview")
@@ -120,7 +171,48 @@ function AdminProducts() {
 
   return (
     <Fragment>
-      <div className="mb-4 flex items-center justify-between">
+      {/* === Dashboard Content moved here === */}
+      <div className="mb-8">
+        <ProductImageUpload
+          imageFile={dashImageFile}
+          setImageFile={setDashImageFile}
+          uploadedImageUrl={dashUploadedImageUrl}
+          setUploadedImageUrl={setDashUploadedImageUrl}
+          setImageLoadingState={setDashImageLoadingState}
+          imageLoadingState={dashImageLoadingState}
+          isCustomStyling={true}
+          isEditMode={false}
+        />
+
+        <Button
+          onClick={handleUploadFeatureImage}
+          className="mt-5 w-full"
+          disabled={!dashUploadedImageUrl || dashImageLoadingState}
+        >
+          Upload Feature Image
+        </Button>
+
+        <div className="flex flex-col gap-4 mt-5">
+          {featureImageList && featureImageList.length > 0 ? (
+            featureImageList.map((featureImgItem, index) => (
+              <div key={featureImgItem._id || index} className="relative">
+                <img
+                  src={
+                    (featureImgItem.image || "").startsWith("/")
+                      ? `http://localhost:5001${featureImgItem.image}`
+                      : featureImgItem.image
+                  }
+                  className="w-full h-[300px] object-cover rounded-t-lg"
+                  alt={`Feature image ${index + 1}`}
+                />
+              </div>
+            ))
+          ) : null}
+        </div>
+      </div>
+
+      {/* === Existing Products Content below === */}
+      <div className="mb-4 flex items-center justify-between bg-gray-400 mx-auto">
         <Button onClick={() => setOpenCreateProductsDialog(true)}>
           Add Product
         </Button>
@@ -151,14 +243,17 @@ function AdminProducts() {
         ))}
       </div>
 
+      {/* Add/Edit Product Sheet */}
       <Sheet
         open={openCreateProductsDialog}
-        onOpenChange={() => {
-          setOpenCreateProductsDialog(false);
-          setCurrentEditedId(null);
-          setFormData(initialFormData);
-          setUploadedImageUrl(null);
-          setImageFile(null);
+        onOpenChange={(open) => {
+          setOpenCreateProductsDialog(open);
+          if (!open) {
+            setCurrentEditedId(null);
+            setFormData(initialFormData);
+            setUploadedImageUrl(null);
+            setImageFile(null);
+          }
         }}
       >
         <SheetContent side="right" className="overflow-auto">

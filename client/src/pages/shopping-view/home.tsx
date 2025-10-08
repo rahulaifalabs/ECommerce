@@ -140,6 +140,7 @@ function handleGetProductDetails(productId: string) {
   // ------------------- Render -------------------
   return (
     <div className="flex flex-col min-h-screen">
+    
       {/* Banner Slider */}
       <div className="relative w-full h-[600px] overflow-hidden">
         {featureImageList.map((slide, index) => (

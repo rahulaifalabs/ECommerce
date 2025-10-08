@@ -11,8 +11,13 @@ export interface FilterOption {
   label: string;
 }
 
+// ✅ [CHANGE #1] Explicitly define the shape of `filterOptions`
+//    so TypeScript knows valid keys (category, brand, etc.)
 export interface FilterOptions {
-  [category: string]: FilterOption[];
+  category: FilterOption[];
+  brand: FilterOption[];
+  // 👇 add more if needed, or make it flexible:
+  // [key: string]: FilterOption[];
 }
 
 export interface Filters {
@@ -26,17 +31,21 @@ interface ProductFilterProps {
 
 // ----------------- Component -----------------
 function ProductFilter({ filters, handleFilter }: ProductFilterProps) {
+  // ✅ [CHANGE #2] Narrow `keyItem` to keys of `filterOptions`
+  const typedKeys = Object.keys(filterOptions) as (keyof typeof filterOptions)[];
+
   return (
     <div className="bg-background rounded-lg shadow-sm">
       <div className="p-4 border-b">
         <h2 className="text-lg font-extrabold">Filters</h2>
       </div>
       <div className="p-4 space-y-4">
-        {Object.keys(filterOptions).map((keyItem) => (
+        {typedKeys.map((keyItem) => (
           <Fragment key={keyItem}>
             <div>
               <h3 className="text-base font-bold">{keyItem}</h3>
               <div className="grid gap-2 mt-2">
+                {/* ✅ [CHANGE #3] keyItem is now strongly typed */}
                 {filterOptions[keyItem].map((option) => (
                   <Label
                     key={option.id}

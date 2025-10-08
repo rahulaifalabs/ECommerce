@@ -1,4 +1,3 @@
-// AUTO-CONVERTED: Fully typed
 import ProductDetailsDialog from "@/components/shopping-view/product-details";
 import ShoppingProductTile from "@/components/shopping-view/product-tile";
 import { Input } from "@/components/ui/input";
@@ -28,11 +27,14 @@ function SearchProducts() {
     (state: RootState) => state.shopProducts.productDetails
   ) as Product | null;
 
-  const user = useSelector((state: RootState) => state.auth.user) as UserObj | null;
+  const user = useSelector(
+    (state: RootState) => state.auth.user
+  ) as UserObj | null;
 
+  // ✅ changed: directly use CartItem[] instead of { items: CartItem[] }
   const cartItems = useSelector(
     (state: RootState) => state.shopCart.cartItems
-  ) as { items: CartItem[] };
+  ) as CartItem[];
 
   // ------------------- Effects -------------------
   useEffect(() => {
@@ -54,7 +56,8 @@ function SearchProducts() {
 
   // ------------------- Handlers -------------------
   function handleAddtoCart(getCurrentProductId: string, getTotalStock: number) {
-    const currentCartItems = cartItems?.items || [];
+    // ✅ changed: cartItems is directly an array now
+    const currentCartItems = cartItems || [];
 
     const existingItem = currentCartItems.find(
       (item) => item.productId === getCurrentProductId

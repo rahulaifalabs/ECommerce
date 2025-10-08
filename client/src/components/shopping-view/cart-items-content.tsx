@@ -67,7 +67,8 @@ function UserCartItemsContent({ cartItem }: UserCartItemsContentProps) {
       updateCartQuantity({
         userId: user?.id ?? "",
         productId: item.productId,
-        quantity: typeOfAction === "plus" ? item.quantity + 1 : item.quantity - 1,
+        quantity:
+          typeOfAction === "plus" ? item.quantity + 1 : item.quantity - 1,
       })
     ).then((data) => {
       if ((data?.payload as { success?: boolean })?.success) {
@@ -96,7 +97,9 @@ function UserCartItemsContent({ cartItem }: UserCartItemsContentProps) {
   return (
     <div className="flex items-center space-x-4">
       <img
-        src={cartItem?.image ? `${BASE_URL}${cartItem.image}` : "/placeholder.png"}
+        src={
+          cartItem?.image ? `${BASE_URL}${cartItem.image}` : "/placeholder.png"
+        }
         alt={cartItem?.title}
         className="w-20 h-20 rounded object-cover"
       />

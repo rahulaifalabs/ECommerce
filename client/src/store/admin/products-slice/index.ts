@@ -1,75 +1,93 @@
-// AUTO-CONVERTED: extension changed to TypeScript. Please review and add explicit types.
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+// ✅ TypeScript Redux Slice for Admin Products
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import api from "@/utils/api";
 import { Product } from "@/pages/admin-view/Products";
 
-const initialState = {
+// ---------------------- State Type ----------------------
+interface AdminProductsState {
+  isLoading: boolean;
+  productList: Product[];
+}
+
+// ---------------------- Initial State ----------------------
+const initialState: AdminProductsState = {
   isLoading: false,
   productList: [],
 };
 
-export const addNewProduct = createAsyncThunk(
-  "/products/addnewproduct",
-  async (formData) => {
-    const result = await api.post("/admin/products/add", formData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+// ---------------------- Thunks ----------------------
 
-    return result?.data;
-  }
-);
-
-export const fetchAllProducts = createAsyncThunk(
-  "/products/fetchAllProducts",
-  async () => {
-    const result = await api.get("/admin/products/get");
-
-    return result?.data;
-  }
-);
-
-export const editProduct = createAsyncThunk<
-  {},
-  {
-    id: string | undefined;
-    formData: Product;
-  }
->("/products/editProduct", async ({ id, formData }) => {
-  const result = await api.put(`/admin/products/edit/${id}`, formData, {
-    headers: {
-      "Content-Type": "application/json",
-    },
+/**
+ * ✅ Add New Product
+ */
+export const addNewProduct = createAsyncThunk<
+  // Return type
+  any,
+  // Argument type
+  Product
+>("/products/addnewproduct", async (formData) => {
+  const result = await api.post("/admin/products/add", formData, {
+    headers: { "Content-Type": "application/json" },
   });
-
   return result?.data;
 });
 
-export const deleteProduct = createAsyncThunk(
-  "/products/deleteProduct",
-  async (id: string) => {
-    const result = await api.delete(`/admin/products/delete/${id}`);
-
+/**
+ * ✅ Fetch All Products
+ */
+export const fetchAllProducts = createAsyncThunk<any>(
+  "/products/fetchAllProducts",
+  async () => {
+    const result = await api.get("/admin/products/get");
     return result?.data;
   }
 );
 
+/**
+ * ✅ Edit Product
+ */
+export const editProduct = createAsyncThunk<
+  any,
+  { id: string; formData: Product }
+>("/products/editProduct", async ({ id, formData }) => {
+  const result = await api.put(`/admin/products/edit/${id}`, formData, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return result?.data;
+});
+
+/**
+ * ✅ Delete Product
+ */
+export const deleteProduct = createAsyncThunk<any, string>(
+  "/products/deleteProduct",
+  async (id) => {
+    const result = await api.delete(`/admin/products/delete/${id}`);
+    return result?.data;
+  }
+);
+
+// ---------------------- Slice ----------------------
 const AdminProductsSlice = createSlice({
   name: "adminProducts",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // 🔹 Fetch All Products
       .addCase(fetchAllProducts.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(fetchAllProducts.fulfilled, (state, action) => {
+      .addCase(fetchAllProducts.fulfilled, (state, action: PayloadAction<any>) => {
         state.isLoading = false;
-        state.productList = action.payload.data;
+
+        // ✅ Safely handle response structure
+        state.productList =
+          action.payload?.data && Array.isArray(action.payload.data)
+            ? action.payload.data
+            : [];
       })
-      .addCase(fetchAllProducts.rejected, (state, action) => {
+      .addCase(fetchAllProducts.rejected, (state) => {
         state.isLoading = false;
         state.productList = [];
       });

@@ -37,7 +37,9 @@ const initialAddressFormData: AddressFormData = {
 };
 
 function Address({ setCurrentSelectedAddress, selectedId }: AddressProps) {
-  const [formData, setFormData] = useState<AddressFormData>(initialAddressFormData);
+  const [formData, setFormData] = useState<AddressFormData>(
+    initialAddressFormData
+  );
   const [currentEditedId, setCurrentEditedId] = useState<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -64,22 +66,27 @@ function Address({ setCurrentSelectedAddress, selectedId }: AddressProps) {
           addressId: currentEditedId,
           formData,
         })
-      ).then((data) => {
-        if (data?.payload?.success) {
-          dispatch(fetchAllAddresses(user?.id ?? ""));
-          setCurrentEditedId(null);
-          setFormData(initialAddressFormData);
-          toast({ title: "Address updated successfully" });
-        }
-      });
+      )
+        .unwrap()
+        .then((res) => {
+          if (res.success) {
+            dispatch(fetchAllAddresses(user?.id ?? ""));
+            setCurrentEditedId(null);
+            setFormData(initialAddressFormData);
+            toast({ title: "Address updated successfully" });
+          }
+        })
+        .catch(() => {
+          toast({ title: "Failed to update address", variant: "destructive" });
+        });
     } else {
       dispatch(
         addNewAddress({
           ...formData,
           userId: user?.id ?? "",
         })
-      ).then((data) => {
-        if (data?.payload?.success) {
+      ).unwrap().then((res) => {
+        if (res.success) {
           dispatch(fetchAllAddresses(user?.id ?? ""));
           setFormData(initialAddressFormData);
           toast({ title: "Address added successfully" });
@@ -89,8 +96,10 @@ function Address({ setCurrentSelectedAddress, selectedId }: AddressProps) {
   }
 
   function handleDeleteAddress(address: AddressInfo) {
-    dispatch(deleteAddress({ userId: user?.id ?? "", addressId: address._id })).then((data) => {
-      if (data?.payload?.success) {
+    dispatch(
+      deleteAddress({ userId: user?.id ?? "", addressId: address._id })
+    ).unwrap().then((data) => {
+      if (data.success) {
         dispatch(fetchAllAddresses(user?.id ?? ""));
         toast({ title: "Address deleted successfully" });
       }

@@ -1,4 +1,3 @@
-// ShoppingHeader.tsx
 import {
   HousePlug,
   LogOut,
@@ -100,9 +99,16 @@ function MenuItems() {
 
 // ---------------- HeaderRightContent ----------------
 function HeaderRightContent() {
-  const { user } = useSelector((state: RootState) => state.auth as { user: User | null });
-const cartItems = useSelector((state: RootState) => state.shopCart.cartItems);
-
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  // 🔧 FIX #1: Safely extract `cartItems` and ensure it’s *always* an array.
+  // Many Redux slices return `{ items: [...] }` instead of just `[...]`.
+  const cartData = useSelector((state: RootState) => state.shopCart.cartItems);
+  const cartItems = Array.isArray(cartData?.items)
+    ? cartData.items
+    : Array.isArray(cartData)
+    ? cartData
+    : [];
 
   const [openCartSheet, setOpenCartSheet] = useState(false);
   const navigate = useNavigate();
@@ -113,6 +119,7 @@ const cartItems = useSelector((state: RootState) => state.shopCart.cartItems);
     dispatch(logoutUser());
   }
 
+  // 🔧 FIX #2: Safely fetch user’s cart only when user is logged in
   useEffect(() => {
     if (user?.id) {
       dispatch(fetchCartItems(user.id));
@@ -121,10 +128,7 @@ const cartItems = useSelector((state: RootState) => state.shopCart.cartItems);
 
   return (
     <div className="flex lg:items-center lg:flex-row flex-col gap-4">
-      <Sheet
-        open={openCartSheet}
-        onOpenChange={(open) => setOpenCartSheet(open)}
-      >
+      <Sheet open={openCartSheet} onOpenChange={setOpenCartSheet}>
         <Button
           onClick={() => setOpenCartSheet(true)}
           variant="outline"
@@ -132,19 +136,21 @@ const cartItems = useSelector((state: RootState) => state.shopCart.cartItems);
           className="relative"
         >
           <ShoppingCart className="w-6 h-6" />
+          {/* 🔧 FIX #3: Use cartItems.length safely */}
           <span className="absolute top-[-5px] right-[2px] font-bold text-sm">
-  {cartItems.length}
-</span>
+            {cartItems.length}
+          </span>
           <span className="sr-only">User cart</span>
         </Button>
-      <UserCartWrapper
-  setOpenCartSheet={setOpenCartSheet}
-  cartItems={cartItems.map(item => ({
-    ...item,
-    title: item.name // map `name` to `title`
-  }))}
-/>
 
+        {/* 🔧 FIX #4: Safely map cartItems, fallback title if missing */}
+        <UserCartWrapper
+          setOpenCartSheet={setOpenCartSheet}
+          cartItems={cartItems.map((item) => ({
+            ...item,
+            title: item.title || (item as any).name || "Unnamed Product",
+          }))}
+        />
       </Sheet>
 
       <DropdownMenu>

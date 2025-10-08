@@ -44,7 +44,7 @@ interface User {
 interface ProductDetailsDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  productDetails: Product | null;
+  productDetails: Product
 }
 
 // ---------------- Component ----------------
